@@ -1,4 +1,5 @@
 .idea
 ..gitignore.un~
-.gitignore
+.gitignore~
 __pycache__
+.README.md.un~ 
