@@ -1,8 +1,7 @@
 # public
 import os
 import cv2
-import torch
-import torch.nn as nn
+import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from albumentations import (CropNonEmptyMaskIfExists, Rotate, HueSaturationValue, )
 
@@ -23,6 +22,7 @@ class ThumbnailDataset(Dataset):
             transformed = self.transform(image=image, mask=mask)
             image = transformed["image"]
             mask = transformed["mask"]
+        image = np.transpose(image, [2,0,1])
         return image, mask
 
     def load_img(self, item: int):
