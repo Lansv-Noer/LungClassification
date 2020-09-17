@@ -25,9 +25,7 @@ class Generator(object):
     TODO: Note that the RLE mask haven't implemented.
     """
 
-    def __init__(self, work_dir: str, split: str,
-                 classes_valid: Union[Tuple[str], List[str]] = ["certain", "NO", "uncertain"],
-                 write: bool = False):
+    def __init__(self, work_dir: str, write: bool = False):
         self.work_dir = work_dir
         self.shell = win32com.client.Dispatch("WScript.Shell")
         self.dict_path, num = self.traverse(self.work_dir)
@@ -53,28 +51,29 @@ class Generator(object):
             val_sum += 1
         return file_dist, val_sum
 
-    def generate(self, path_out: str):
+    def generate(self, path_out: str, dir_anno: str, layer: int):
         assert os.path.exists(path_out), "PathError: {} doesn't exist.".format(path_out)
-        dir_anno = "I:\\test"
+        assert os.path.exists(dir_anno), "PathError: {} doesn't exist.".format(dir_anno)
+
         for key, vsis in self.dict_path.items():
             print(key)
             value = TABLE[key]
             for vsi in vsis:
                 reader = VsiReader(vsi)
-                img = reader.getImage(5)
+                img = reader.getImage(layer)
                 vsi_name = vsi.split("\\")[-1].split(".")[0]
+                print(vsi_name)
                 name = vsi_name + ".png"
-                # cv2.imwrite(os.path.join(path_out, name), img[..., ::-1])
+                cv2.imwrite(os.path.join(path_out, name), img[..., ::-1])
 
                 path_anno = os.path.join(dir_anno, vsi_name + ".vsi - 40x_annotation.json")
                 base = np.zeros(img.shape[:2], dtype=np.uint8)
                 if os.path.exists(path_anno):
                     anno = parse_vsi_anno(path_anno)
                     for elem in anno:
-                        base = cv2.drawContours(base, [elem["contour"]//32], 0, value, -1)
+                        base = cv2.drawContours(base, [elem["contour"]//(2**layer)], 0, value, -1)
                 name = vsi_name + "_mask.png"
                 cv2.imwrite(os.path.join(path_out, name), base)
-
         print("End.")
 
 
@@ -85,8 +84,8 @@ if __name__ == '__main__':
 
     javabridge.start_vm(class_path=bioformats.JARS)  # I code javabridge here, and maybe it will be proven wrong
 
-    gen = Generator("I:\\TJU-PSP-try\\Join", "train", ["certain"])
-    gen.generate("I:\\Out")
+    gen = Generator("G:\medical\TJU-PSP-try\Join")
+    gen.generate(path_out="H:\\test", dir_anno="G:\\medical\\anno_meta", layer=3)
     javabridge.kill_vm()
 
     print("End.")

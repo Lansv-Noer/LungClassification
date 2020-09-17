@@ -6,6 +6,9 @@ from torch.utils.data import Dataset, DataLoader
 from albumentations import (CropNonEmptyMaskIfExists, Rotate, HueSaturationValue, )
 
 
+TABLE = {63: 3, 127: 2, 255: 1}  # psp: 255, ac: 127, background/lung: 0
+
+
 class ThumbnailDataset(Dataset):
     def __init__(self, dir: str, transform):
         assert os.path.exists(dir), "DirectoryError: {} doesn't exist.".format(dir)
@@ -23,6 +26,7 @@ class ThumbnailDataset(Dataset):
             image = transformed["image"]
             mask = transformed["mask"]
         image = np.transpose(image, [2,0,1])
+        mask = mask.astype(np.int64)
         return image, mask
 
     def load_img(self, item: int):
@@ -31,7 +35,10 @@ class ThumbnailDataset(Dataset):
 
     def load_mask(self, item: int):
         assert 0 <= item < len(self), "ParamError: item is out of range"
-        return cv2.imread(self.list_image[item] + "_mask.png")[..., ::-1]
+        mask = cv2.imread(self.list_image[item] + "_mask.png", cv2.IMREAD_GRAYSCALE)
+        for origin, target in TABLE.items():
+            mask[mask==origin] = target
+        return mask
 
     def traverse(self, dir: str):
         list_image = []
