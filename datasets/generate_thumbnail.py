@@ -20,12 +20,11 @@ TABLE = {"lung": 63, "ac": 127, "psp": 255}
 
 class Generator(object):
     """
-    Traverse all vsi and generate coco-format json
-
-    TODO: Note that the RLE mask haven't implemented.
+    the generator of low-resolution image of vsi
+    :param work_dir: the directory of original vsi file
     """
 
-    def __init__(self, work_dir: str, write: bool = False):
+    def __init__(self, work_dir: str):
         self.work_dir = work_dir
         self.shell = win32com.client.Dispatch("WScript.Shell")
         self.dict_path, num = self.traverse(self.work_dir)
@@ -52,6 +51,13 @@ class Generator(object):
         return file_dist, val_sum
 
     def generate(self, path_out: str, dir_anno: str, layer: int):
+        """
+        generating method
+        :param path_out: the output directory
+        :param dir_anno: the directory of annotations
+        :param layer: the layer you want to extract, e.g. 0 means 40x, 1 means 20x, and so on.
+        :return: bool: return True if all image patch is generated.
+        """
         assert os.path.exists(path_out), "PathError: {} doesn't exist.".format(path_out)
         assert os.path.exists(dir_anno), "PathError: {} doesn't exist.".format(dir_anno)
 
@@ -74,7 +80,7 @@ class Generator(object):
                         base = cv2.drawContours(base, [elem["contour"]//(2**layer)], 0, value, -1)
                 name = vsi_name + "_mask.png"
                 cv2.imwrite(os.path.join(path_out, name), base)
-        print("End.")
+        return True
 
 
 if __name__ == '__main__':
