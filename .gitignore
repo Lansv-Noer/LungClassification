@@ -2,4 +2,5 @@
 ..gitignore.un~
 .gitignore~
 __pycache__
-.README.md.un~ 
+.README.md.un~
+*.pth

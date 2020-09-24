@@ -66,6 +66,7 @@ class ThumbnailPatchDataset(Dataset):
         assert 0 <= item < len(self), "ParamError: item is out of range"
         if self.buffer:
             base = cv2.imread(os.path.join(self.path_buffer, str(item) + "_mask.png"), cv2.IMREAD_GRAYSCALE)
+            base = base
         else:
             path_image, x, y = self.list_image[item]
             image_entire = cv2.imread(path_image + "_mask.png", cv2.IMREAD_GRAYSCALE)
@@ -75,6 +76,7 @@ class ThumbnailPatchDataset(Dataset):
                  0:min(self.width_tile, (width_image - x * self.width_tile))] = \
             image_entire[y * self.height_tile:min((y + 1) * self.height_tile, height_image),
                          x * self.width_tile:min((x + 1) * self.width_tile, width_image)]
+            base = base
         return base
 
     def traverse(self, dir: str):
@@ -125,7 +127,7 @@ if __name__ == '__main__':
         Normalize(mean=mean_data, std=std_data, p=1),
     ])
 
-    dataset = ThumbnailPatchDataset(dir="G:\medical\Out\Try", transform=aug, sizeTile=[496, 496], buffer=True, path_buffer="H:\\test")
+    dataset = ThumbnailPatchDataset(dir="H:\\test_in", transform=aug, sizeTile=[496, 496], buffer=True, path_buffer="H:\\test")
     for idx in range(1, len(dataset)):
         image, mask, (name, x, y) = dataset[idx]
         print(name, x, y)

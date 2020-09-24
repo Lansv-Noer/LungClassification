@@ -91,7 +91,7 @@ if __name__ == '__main__':
     javabridge.start_vm(class_path=bioformats.JARS)  # I code javabridge here, and maybe it will be proven wrong
 
     gen = Generator("G:\medical\TJU-PSP-try\Join")
-    gen.generate(path_out="H:\\test", dir_anno="G:\\medical\\anno_meta", layer=3)
+    gen.generate(path_out="G:\\medical\\Out_5X", dir_anno="G:\\medical\\anno_meta", layer=3)
     javabridge.kill_vm()
 
     print("End.")
