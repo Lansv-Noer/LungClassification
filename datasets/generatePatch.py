@@ -71,14 +71,25 @@ class Generator(object):
                 vsi_name = vsi.split("\\")[-1].split(".")[0]
                 print(vsi_name)
                 num_tile_x, num_tile_y = reader.getNumTile()
+                path_anno = os.path.join(dir_anno, vsi_name + ".vsi - 40x_annotation.json")
+                anno = parse_vsi_anno(path_anno)
+                contours = [elem["contour"]//(2**layer) for elem in anno]
                 for i in range(num_tile_x):
                     for j in range(num_tile_y):
-                        tile, _ = reader.getTile(i, j)
-                        if tile.shape[1] < size[0] or tile.shape[0] < size[1]:
-                            base = np.zeros([size[1], size[0], 3], dtype=np.uint8)
-                            base[:tile.shape[0], :tile.shape[1]] = tile
-                            tile = base
-                        cv2.imwrite(os.path.join(path_out, vsi_name + "_{}_{}.png".format(i, j)), tile)
+                        flag_in = False
+                        tile, pos = reader.getTile(i, j)  # pos: ((x, y), (w, h))
+                        # print(pos)
+                        if tile.mean() < 210:  # 判断图像块均值并抛弃空白块， 这里的210是个人经验值。该步骤会降低运行速度
+                            for contour in contours:  # test whehter the block is in the contour or not
+                                if cv2.pointPolygonTest(contour, (pos[0][0] + pos[1][0]//2, pos[0][1] + pos[1][1]//2), 0) >= 0:
+                                    flag_in = True
+                                    break
+                            if flag_in:
+                                if tile.shape[1] < size[0] or tile.shape[0] < size[1]:
+                                    base = np.zeros([size[1], size[0], 3], dtype=np.uint8)
+                                    base[:tile.shape[0], :tile.shape[1]] = tile
+                                    tile = base
+                                cv2.imwrite(os.path.join(path_out, vsi_name + "_{}_{}.png".format(i, j)), tile)
 
                 # path_anno = os.path.join(dir_anno, vsi_name + ".vsi - 40x_annotation.json")
                 # base = np.zeros(img.shape[:2], dtype=np.uint8)
@@ -99,7 +110,7 @@ if __name__ == '__main__':
     javabridge.start_vm(class_path=bioformats.JARS)  # I code javabridge here, and maybe it will be proven wrong
 
     gen = Generator("G:\medical\TJU-PSP-try\Join")
-    gen.generate(path_out="H:\\test", dir_anno="G:\\medical\\anno_meta", layer=3, size=[512, 512])
+    gen.generate(path_out="H:\\test", dir_anno="G:\\medical\\anno_meta", layer=0, size=[496, 496])
     javabridge.kill_vm()
 
     print("End.")
